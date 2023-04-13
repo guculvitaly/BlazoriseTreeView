@@ -1,0 +1,14 @@
+﻿@using System.Text.Json
+
+@code {
+    [Parameter] public string NodeId { get; set; }
+    private List<string> SavedCheckboxes { get; set; } = new List<string>();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        SavedCheckboxes.AddRange(new List<string>{NodeId});
+
+        Console.WriteLine("CheckBoxComponent {0}", JsonSerializer.Serialize(SavedCheckboxes));
+    }
+}

@@ -1,0 +1,184 @@
+﻿@using System.Text.Json;
+@using System.Text.Json.Serialization;
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IJSRuntime JSRuntime
+
+
+<!--main node-->
+<li>
+
+    <Icon Name="Item.CaretClass" Clicked="@(()=>OnClickNode(Item))"></Icon>
+    <input type="checkbox" checked="@Item.IsChecked" class="check" value="@Item.NodeId" @oninput="(e)=> CheckboxChanged(e, Item)" id="@Item.NodeId" />
+
+    <span>@Item.Text</span>
+
+    @if (Item.Children != null && Item.Children.Any())
+    {
+        <ul class="@Level @Item.ShowOrHideUl">
+            @foreach (var child in Item.Children)
+            {
+                <TreeComponent Item=@child Level="@(Level + 1)" FavoritesParentCallback="ChildNodesCallback" @key=child />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [CascadingParameter] private List<Item> AllDataSource { get; set; }
+    [Parameter] public Item Item { get; set; }
+    [Parameter] public Item FavoriteNode { get; set; }
+    [Parameter] public EventCallback<List<Item>> FavoritesNodesCallBack { get; set; }
+    [Parameter] public EventCallback<Item> FavoritesParentCallback { get; set; }
+    [Parameter] public int Level { get; set; }
+    private IJSObjectReference _jsModule;
+
+    //List<Item> CheckedNodes { get; set; } = new();
+    protected List<string> SelectedIds = new List<string>();
+    List<string> SelectedValues { get; set; } = new();
+
+
+    List<string> testIds = new List<string> { "1", "2", "2.1", "2.2", "2.2.1", "2.2.2", "2.2.3" };
+
+    List<Item> FavoritesNodes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Checked_Ids.js");
+    }
+    async void ChildNodesCallback(Item node)
+    {
+        //FavoriteNode = node;
+        await FavoritesParentCallback.InvokeAsync(node);
+    }
+
+    void OnClickNode(Item item)
+    {
+        item.ShowItem = !item.ShowItem;
+        // StateHasChanged();
+    }
+
+    private Item AddCheckedNodes(Item item, List<String> ids)
+    {
+        var child = new Item
+            {
+                NodeId = item.NodeId,
+                ParentId = item.ParentId,
+                Text = item.Text,
+                IsChecked = true,
+                Children = new List<Item>(),
+            };
+
+        if (item.Children?.ToList().Count > 0)
+        {
+
+            foreach (var c in item.Children)
+            {
+
+                if (ids.Contains(c.NodeId))
+                {
+
+                    child.Children.Add(AddCheckedNodes(c, ids));
+                }
+
+            }
+        }
+        return child;
+    }
+
+    // Return call back from JavaScript to C#
+    [JSInvokable]
+    public void JStoCSCall()
+    {
+        Console.WriteLine("Upto max 3 items can be selected");
+        StateHasChanged();
+    }
+
+    private async void CheckboxChanged(ChangeEventArgs e, Item node)
+    {
+        var value = e.Value;
+
+
+        await _jsModule.InvokeVoidAsync("checkChange", node.NodeId);
+        node.IsChecked = !node.IsChecked;
+        //Console.WriteLine("CheckboxChanged {0}", JsonSerializer.Serialize(node));
+
+
+        //CheckboxClicked(node.NodeId, value);
+        await FavoritesParentCallback.InvokeAsync(node);
+        var checkedsNode = testIds;
+        if (AllDataSource?.Count > 0)
+        {
+            foreach (var item in AllDataSource)
+            {
+                if (checkedsNode.Contains(item.NodeId))
+                {
+                    var _node = AddCheckedNodes(item, checkedsNode);
+                    FavoritesNodes.Add(_node);
+                    await FavoritesNodesCallBack.InvokeAsync(FavoritesNodes);
+
+
+                }
+            }
+
+        }
+        //localStorage.SetItemAsync("CheckedNodes_Main_Tree", string.Concat(",", node.NodeId));
+
+
+    }
+
+    async void CheckboxClicked(string nodeId, object checkedValue)
+    {
+        var ids = new List<Item>();
+        var checkNode = new Item(nodeId);
+
+        if ((bool)checkedValue)
+        {
+
+            if (!SelectedValues.Contains(nodeId))
+            {
+                Console.WriteLine("Add node {0}", checkedValue);
+
+                SelectedValues.Add(nodeId);
+            }
+        }
+        else
+        {
+
+            if (SelectedValues.Contains(nodeId))
+            {
+                Console.WriteLine("Remove node {0}", checkedValue);
+                SelectedValues.Remove(nodeId);
+            }
+        }
+
+
+        //localStorage.SetItemAsync("CheckedNodes_Main_Tree", ids.SelectMany(f => f.NodeId));
+
+        Console.WriteLine("CheckedNodes {0}", JsonSerializer.Serialize(SelectedValues));
+
+
+    }
+
+    private void CheckAllNodes(Item item, bool isChecked)
+    {
+
+
+        if (item.ParentId == null)
+        {
+            item.IsChecked = isChecked;
+            foreach (var i in item.Children)
+            {
+
+            }
+        }
+    }
+}
+<style>
+    ul {
+        list-style: outside none none;
+    }
+
+    .hideChild {
+        display: none;
+    }
+</style>

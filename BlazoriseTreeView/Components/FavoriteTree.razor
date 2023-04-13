@@ -1,0 +1,36 @@
+﻿
+<li>
+
+    <Icon Name="Item.CaretClass" Clicked="@(()=>OnClickNode(Item))"></Icon>
+    <input type="checkbox" checked="@Item.IsChecked" @oninput="(e)=> CheckboxChanged(e, Item)" id="c_bs_1" />
+    <span>@Item.Text</span>
+
+    @if (Item.Children != null && Item.Children.Any())
+    {
+        <ul class="@Level @Item.ShowOrHideUl">
+            @foreach (var child in Item.Children)
+            {
+                <FavoriteTree Item=@child Level="@(Level + 1)"  @key=child />
+            }
+        </ul>
+    }
+</li>
+
+
+@code {
+    [Parameter] public Item Item { get; set; }
+    [Parameter] public int Level { get; set; }
+
+
+
+    private async void CheckboxChanged(ChangeEventArgs e, Item node)
+    {
+        
+    }
+
+    void OnClickNode(Item item)
+    {
+        item.ShowItem = !item.ShowItem;
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,99 @@
+﻿@page "/counter"
+@using System.Text.Json
+
+
+<PageTitle>Counter</PageTitle>
+
+<ul level="0">
+    @{
+        @if (FavoritesNodes is not null)
+        {
+            @foreach (var item in FavoritesNodes)
+            {
+
+                <BlazoriseTreeView.Components.FavoriteTree Item="@item" Level=1 @key=item />
+            }
+        }
+
+    }
+
+</ul>
+
+<CascadingValue Value="@AllDataSource">
+    <ul level="0">
+        @foreach (var item in Items)
+        {
+            <BlazoriseTreeView.Components.TreeComponent Item=@item FavoritesParentCallback="FavoriteCallbackNode" FavoritesNodesCallBack="_FavoritesNodesCallBack" Level=1 @key=item />
+        }
+    </ul>
+</CascadingValue>
+
+
+
+
+@code {
+    public List<Item> AllDataSource { get; set; }
+    private int currentCount = 0;
+    private List<Item> FavoritesNodes { get; set; } = new List<Item>();
+    private Item FavoNodes { get; set; } = null;
+    List<string> selectedNodes = new List<string>();
+    IEnumerable<Item> Items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Items = new[]
+                                            {
+        new Item { Text = "Item 1", ParentId = null, NodeId = "1" },
+        new Item
+        {
+            Text = "Item 2",
+            ParentId = 1,
+            NodeId = "2",
+            Children = new List<Item>
+            {
+                new Item { Text = "Item 2.1", ParentId = 1,  NodeId = "2.1",},
+                new Item
+                {
+                    Text = "Item 2.2",
+                    ParentId = 2,
+                    NodeId = "2.2",
+                    Children = new List<Item>
+                    {
+                        new Item { Text = "Item 2.2.1", ParentId = 2,NodeId = "2.2.1", },
+                        new Item { Text = "Item 2.2.2", ParentId = 2,NodeId = "2.2.2", },
+                        new Item { Text = "Item 2.2.3", ParentId = 2,NodeId = "2.2.3", },
+                        new Item { Text = "Item 2.2.4", ParentId = 2,NodeId = "2.2.4", },
+                        new Item { Text = "Item 2.2.5", ParentId = 2,NodeId = "2.2.5", },
+                        new Item { Text = "Item 2.2.6", ParentId = 3,NodeId = "2.2.6",
+                                    Children = new List<Item>
+                                    { new Item { Text = "Item 2.2.7",NodeId = "2.2.7", ParentId = 3},
+
+                                    }
+                        },
+                    }
+                },
+                new Item { Text = "Item 2.3",ParentId = 2,NodeId = "2.3" },
+                new Item { Text = "Item 2.4",ParentId = 2,NodeId = "2.4" }
+            }
+        },
+        new Item { Text = "Item 3",ParentId = null,NodeId = "3" },
+    };
+
+        AllDataSource = Items.ToList();
+    }
+
+
+    void _FavoritesNodesCallBack(List<Item> favNodes)
+    {
+        FavoritesNodes = favNodes;
+        StateHasChanged();
+    }
+    void FavoriteCallbackNode(Item node)
+    {
+
+
+    }
+
+
+}
