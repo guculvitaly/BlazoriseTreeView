@@ -10,8 +10,8 @@
         {
             @foreach (var item in FavoritesNodes)
             {
-
-                <BlazoriseTreeView.Components.FavoriteTree Item="@item" Level=1 @key=item />
+                var _key = "favorites_" + item;
+                <BlazoriseTreeView.Components.FavoriteTree FavoriteItem="@item" Level=1 @key=item />
             }
         }
 
@@ -23,6 +23,7 @@
     <ul level="0">
         @foreach (var item in Items)
         {
+             var _key = "main_tree_" + item;
             <BlazoriseTreeView.Components.TreeComponent Item=@item FavoritesParentCallback="FavoriteCallbackNode" FavoritesNodesCallBack="_FavoritesNodesCallBack" Level=1 @key=item />
         }
     </ul>
@@ -44,37 +45,37 @@
         await base.OnInitializedAsync();
         Items = new[]
                                             {
-        new Item { Text = "Item 1", ParentId = null, NodeId = "1" },
+        new Item { Text = "Item 1",  NodeId = "1" },
         new Item
         {
             Text = "Item 2",
-            ParentId = 1,
+
             NodeId = "2",
             Children = new List<Item>
             {
-                new Item { Text = "Item 2.1", ParentId = 1,  NodeId = "2.1",},
+                new Item { Text = "Item 2.1",   NodeId = "2.1",},
                 new Item
                 {
                     Text = "Item 2.2",
-                    ParentId = 2,
+
                     NodeId = "2.2",
                     Children = new List<Item>
                     {
-                        new Item { Text = "Item 2.2.1", ParentId = 2,NodeId = "2.2.1", },
-                        new Item { Text = "Item 2.2.2", ParentId = 2,NodeId = "2.2.2", },
-                        new Item { Text = "Item 2.2.3", ParentId = 2,NodeId = "2.2.3", },
-                        new Item { Text = "Item 2.2.4", ParentId = 2,NodeId = "2.2.4", },
-                        new Item { Text = "Item 2.2.5", ParentId = 2,NodeId = "2.2.5", },
-                        new Item { Text = "Item 2.2.6", ParentId = 3,NodeId = "2.2.6",
+                        new Item { Text = "Item 2.2.1",NodeId = "2.2.1", },
+                        new Item { Text = "Item 2.2.2",NodeId = "2.2.2", },
+                        new Item { Text = "Item 2.2.3", NodeId = "2.2.3", },
+                        new Item { Text = "Item 2.2.4", NodeId = "2.2.4", },
+                        new Item { Text = "Item 2.2.5", NodeId = "2.2.5", },
+                        new Item { Text = "Item 2.2.6", NodeId = "2.2.6",
                                     Children = new List<Item>
-                                    { new Item { Text = "Item 2.2.7",NodeId = "2.2.7", ParentId = 3},
+                                    { new Item { Text = "Item 2.2.7",NodeId = "2.2.7", },
 
                                     }
                         },
                     }
                 },
-                new Item { Text = "Item 2.3",ParentId = 2,NodeId = "2.3" },
-                new Item { Text = "Item 2.4",ParentId = 2,NodeId = "2.4" }
+                new Item { Text = "Item 2.3",NodeId = "2.3" },
+                new Item { Text = "Item 2.4",NodeId = "2.4" }
             }
         },
         new Item { Text = "Item 3",ParentId = null,NodeId = "3" },
@@ -83,15 +84,23 @@
         AllDataSource = Items.ToList();
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+    }
 
     void _FavoritesNodesCallBack(List<Item> favNodes)
     {
-        FavoritesNodes = favNodes;
+
+        //FavoritesNodes = favNodes;
         StateHasChanged();
     }
     void FavoriteCallbackNode(Item node)
     {
+       
+        FavoritesNodes.Add(node);
 
+        Console.WriteLine("node {0}", JsonSerializer.Serialize(FavoritesNodes));
 
     }
 

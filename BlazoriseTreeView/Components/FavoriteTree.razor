@@ -1,16 +1,17 @@
 ﻿
 <li>
 
-    <Icon Name="Item.CaretClass" Clicked="@(()=>OnClickNode(Item))"></Icon>
-    <input type="checkbox" checked="@Item.IsChecked" @oninput="(e)=> CheckboxChanged(e, Item)" id="c_bs_1" />
-    <span>@Item.Text</span>
+    <Icon Name="FavoriteItem.CaretClass" Clicked="@(()=>OnClickNode(FavoriteItem))"></Icon>
+    <input type="checkbox" checked="@FavoriteItem.IsChecked" @oninput="(e)=> CheckboxChanged(e, FavoriteItem)" id="c_bs_1" />
+    <span>@FavoriteItem.Text</span>
 
-    @if (Item.Children != null && Item.Children.Any())
+    @if (FavoriteItem.Children != null && FavoriteItem.Children.Any())
     {
-        <ul class="@Level @Item.ShowOrHideUl">
-            @foreach (var child in Item.Children)
+        <ul class="@Level @FavoriteItem.ShowOrHideUl">
+            @foreach (var child in FavoriteItem.Children)
             {
-                <FavoriteTree Item=@child Level="@(Level + 1)"  @key=child />
+                var _key = "favorites_childs_" + child;
+                <FavoriteTree FavoriteItem=@child Level="@(Level + 1)"  @key=child />
             }
         </ul>
     }
@@ -18,7 +19,7 @@
 
 
 @code {
-    [Parameter] public Item Item { get; set; }
+    [Parameter] public Item FavoriteItem { get; set; }
     [Parameter] public int Level { get; set; }
 
 

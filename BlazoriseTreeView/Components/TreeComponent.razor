@@ -32,29 +32,63 @@
     [Parameter] public int Level { get; set; }
     private IJSObjectReference _jsModule;
 
-    //List<Item> CheckedNodes { get; set; } = new();
+    protected List<string> LocalStorageSelectedIds = new List<string>();
     protected List<string> SelectedIds = new List<string>();
     List<string> SelectedValues { get; set; } = new();
 
 
-    List<string> testIds = new List<string> { "1", "2", "2.1", "2.2", "2.2.1", "2.2.2", "2.2.3" };
 
     List<Item> FavoritesNodes = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Checked_Ids.js");
+        await base.OnInitializedAsync();
+        InitParentId();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Checked_Ids.js");
+        LocalStorageSelectedIds = await _jsModule.InvokeAsync<List<string>>("checkChange");
+        await localStorage.SetItemAsync("CheckedNodes_Main_Tree", LocalStorageSelectedIds);
+
+    }
+    private void InitParentId()
+    {
+        if(AllDataSource != null)
+        foreach (var item in AllDataSource)
+        {
+            var childs = item.Children;
+            if (childs != null && childs.Count > 0)
+            {
+                SetParentId(childs, item.NodeId);
+            }
+        }
+    }
+    private void SetParentId(List<Item> childs, string parentId)
+    {
+        foreach (var child in childs)
+        {
+            child.ParentId = parentId;
+            if (childs != null && child.Children?.Count > 0)
+            {
+                SetParentId(child.Children, child.NodeId);
+            }
+
+        }
+
+    }
+
     async void ChildNodesCallback(Item node)
     {
-        //FavoriteNode = node;
         await FavoritesParentCallback.InvokeAsync(node);
     }
 
     void OnClickNode(Item item)
     {
         item.ShowItem = !item.ShowItem;
-        // StateHasChanged();
+
     }
 
     private Item AddCheckedNodes(Item item, List<String> ids)
@@ -65,10 +99,10 @@
                 ParentId = item.ParentId,
                 Text = item.Text,
                 IsChecked = true,
-                Children = new List<Item>(),
+                Children = new(),
             };
 
-        if (item.Children?.ToList().Count > 0)
+        if (item.Children?.Count > 0)
         {
 
             foreach (var c in item.Children)
@@ -76,7 +110,7 @@
 
                 if (ids.Contains(c.NodeId))
                 {
-
+                    //c.IsChecked = true;
                     child.Children.Add(AddCheckedNodes(c, ids));
                 }
 
@@ -85,43 +119,44 @@
         return child;
     }
 
-    // Return call back from JavaScript to C#
-    [JSInvokable]
-    public void JStoCSCall()
-    {
-        Console.WriteLine("Upto max 3 items can be selected");
-        StateHasChanged();
-    }
 
     private async void CheckboxChanged(ChangeEventArgs e, Item node)
     {
+        FavoritesNodes.Clear();
+        SelectedIds = await localStorage.GetItemAsync<List<string>>("CheckedNodes_Main_Tree");
         var value = e.Value;
 
-
-        await _jsModule.InvokeVoidAsync("checkChange", node.NodeId);
         node.IsChecked = !node.IsChecked;
-        //Console.WriteLine("CheckboxChanged {0}", JsonSerializer.Serialize(node));
 
-
-        //CheckboxClicked(node.NodeId, value);
-        await FavoritesParentCallback.InvokeAsync(node);
-        var checkedsNode = testIds;
-        if (AllDataSource?.Count > 0)
+        if (node.IsInteracted && node.IsChecked) // if parent node checked
         {
-            foreach (var item in AllDataSource)
-            {
-                if (checkedsNode.Contains(item.NodeId))
-                {
-                    var _node = AddCheckedNodes(item, checkedsNode);
-                    FavoritesNodes.Add(_node);
-                    await FavoritesNodesCallBack.InvokeAsync(FavoritesNodes);
-
-
-                }
-            }
+            CheckAllNodes(node, node.IsChecked);
+        }
+        else
+        {
+            CheckAllNodes(node, node.IsChecked);
 
         }
-        //localStorage.SetItemAsync("CheckedNodes_Main_Tree", string.Concat(",", node.NodeId));
+        if ((bool)value) // if node is checked
+        {
+            await FavoritesParentCallback.InvokeAsync(node);
+
+            if (AllDataSource?.Count > 0)
+            {
+                foreach (var item in AllDataSource)
+                {
+                    if (SelectedIds.Contains(item.NodeId))
+                    {
+                        var _node = AddCheckedNodes(item, SelectedIds);
+                        FavoritesNodes.Add(_node);
+                        await FavoritesNodesCallBack.InvokeAsync(FavoritesNodes);
+
+
+                    }
+                }
+
+            }
+        }
 
 
     }
@@ -159,18 +194,25 @@
 
     }
 
-    private void CheckAllNodes(Item item, bool isChecked)
+    /// <summary>
+    /// Check or Uncheck all nodes
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="isChecked"></param>
+    private async void CheckAllNodes(Item item, bool isChecked)
     {
-
-
-        if (item.ParentId == null)
+        item.IsChecked = isChecked;
+        if (item.Children?.Count() > 0)
         {
-            item.IsChecked = isChecked;
-            foreach (var i in item.Children)
+            foreach (var ch in item.Children)
             {
 
+                CheckAllNodes(ch, isChecked);
             }
         }
+
+
+        StateHasChanged();
     }
 }
 <style>

@@ -12,7 +12,7 @@ namespace BlazoriseTreeView
         {
             CheckedNodes = new List<string>() { checkedNodes };
         }
-        public int? ParentId { get; set; }
+        public string ParentId { get; set; }
         public string NodeId { get; set; }
         public string Text { get; set; }
         /// <summary>
@@ -20,11 +20,12 @@ namespace BlazoriseTreeView
         /// </summary>
         public bool ShowItem { get; set; }
         public bool IsChecked { get; set; }
+        public bool IsInteracted => Children?.Count() > 0 ? true : false;
         public string CaretClass => AddOrRemoveCaretClass();
         public string ShowOrHideUl => !ShowItem ? "hideChild" : string.Empty;
 
         public List<Item> Children { get; set; }
-        public  List<string> CheckedNodes = new List<string>();
+        public List<string> CheckedNodes = new List<string>();
 
         private string AddOrRemoveCaretClass()
         {
@@ -41,7 +42,7 @@ namespace BlazoriseTreeView
             }
             
         }
-
+        
 
 
 
