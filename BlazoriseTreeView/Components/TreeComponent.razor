@@ -50,8 +50,8 @@
     {
         await base.OnAfterRenderAsync(firstRender);
         _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Checked_Ids.js");
-        LocalStorageSelectedIds = await _jsModule.InvokeAsync<List<string>>("checkChange");
-        await localStorage.SetItemAsync("CheckedNodes_Main_Tree", LocalStorageSelectedIds);
+       // LocalStorageSelectedIds = await _jsModule.InvokeAsync<List<string>>("checkChange");
+       // await localStorage.SetItemAsync("CheckedNodes_Main_Tree", LocalStorageSelectedIds);
 
     }
     private void InitParentId()
@@ -141,21 +141,21 @@
         {
             await FavoritesParentCallback.InvokeAsync(node);
 
-            if (AllDataSource?.Count > 0)
-            {
-                foreach (var item in AllDataSource)
-                {
-                    if (SelectedIds.Contains(item.NodeId))
-                    {
-                        var _node = AddCheckedNodes(item, SelectedIds);
-                        FavoritesNodes.Add(_node);
-                        await FavoritesNodesCallBack.InvokeAsync(FavoritesNodes);
+            //if (AllDataSource?.Count > 0)
+            //{
+            //    foreach (var item in AllDataSource)
+            //    {
+            //        if (SelectedIds.Contains(item.NodeId))
+            //        {
+            //            var _node = AddCheckedNodes(item, SelectedIds);
+            //            FavoritesNodes.Add(_node);
+            //            await FavoritesNodesCallBack.InvokeAsync(FavoritesNodes);
 
 
-                    }
-                }
+            //        }
+            //    }
 
-            }
+            //}
         }
 
 
@@ -164,7 +164,7 @@
     async void CheckboxClicked(string nodeId, object checkedValue)
     {
         var ids = new List<Item>();
-        var checkNode = new Item(nodeId);
+       
 
         if ((bool)checkedValue)
         {

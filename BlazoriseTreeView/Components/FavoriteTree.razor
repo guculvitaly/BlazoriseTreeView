@@ -8,9 +8,9 @@
     @if (FavoriteItem.Children != null && FavoriteItem.Children.Any())
     {
         <ul class="@Level @FavoriteItem.ShowOrHideUl">
-            @foreach (var child in FavoriteItem.Children)
+            @foreach (var child in FavoriteItem.Children.Where(r => r.IsChecked).Distinct().ToList())
             {
-                var _key = "favorites_childs_" + child;
+               
                 <FavoriteTree FavoriteItem=@child Level="@(Level + 1)"  @key=child />
             }
         </ul>
