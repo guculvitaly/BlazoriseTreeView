@@ -1,4 +1,5 @@
-﻿
+﻿@using System.Text.Json
+
 <li>
 
     <Icon Name="FavoriteItem.CaretClass" Clicked="@(()=>OnClickNode(FavoriteItem))"></Icon>
@@ -8,7 +9,7 @@
     @if (FavoriteItem.Children != null && FavoriteItem.Children.Any())
     {
         <ul class="@Level @FavoriteItem.ShowOrHideUl">
-            @foreach (var child in FavoriteItem.Children.Where(r => r.IsChecked).Distinct().ToList())
+            @foreach (var child in FavoriteItem.Children)
             {
                
                 <FavoriteTree FavoriteItem=@child Level="@(Level + 1)"  @key=child />
@@ -22,7 +23,11 @@
     [Parameter] public Item FavoriteItem { get; set; }
     [Parameter] public int Level { get; set; }
 
-
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+         Console.WriteLine("FavoriteItem OnParametersSetAsync {0}", JsonSerializer.Serialize(FavoriteItem));
+    }
 
     private async void CheckboxChanged(ChangeEventArgs e, Item node)
     {

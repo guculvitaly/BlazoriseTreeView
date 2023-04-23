@@ -123,7 +123,7 @@
     private async void CheckboxChanged(ChangeEventArgs e, Item node)
     {
         FavoritesNodes.Clear();
-        SelectedIds = await localStorage.GetItemAsync<List<string>>("CheckedNodes_Main_Tree");
+        //SelectedIds = await localStorage.GetItemAsync<List<string>>("CheckedNodes_Main_Tree");
         var value = e.Value;
 
         node.IsChecked = !node.IsChecked;

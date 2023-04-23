@@ -1,0 +1,73 @@
+﻿<ul>
+    @foreach (var item in Items)
+    {
+        <li>
+            <input type="checkbox" @bind="item.IsSelected"   @onclick="(args) => HandleItemClick(item, args)" />
+            @item.Name
+            @if (item.Children.Count > 0)
+            {
+                <CheckBoxList Items="item.Children" OnItemSelected="OnItemSelected" />
+            }
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public List<CheckboxItem> Items { get; set; }
+    [Parameter]
+    public EventCallback<(CheckboxItem, CheckboxItem)> OnItemSelected { get; set; }
+
+
+    private void HandleItemClick(CheckboxItem item, MouseEventArgs args)
+    {
+         item.IsSelected = !item.IsSelected;
+
+        if (item.IsSelected)
+        {
+            var parent = GetParent(item, Items);
+            if (parent != null)
+            {
+                parent.IsSelected = true;
+                StateHasChanged();
+                var index = parent.Children.IndexOf(item);
+                var newItem = new CheckboxItem
+                {
+                    Name = item.Name,
+                    IsSelected = true
+                };
+                parent.Children.Insert(index + 1, newItem);
+                OnItemSelected.InvokeAsync((item, parent));
+            }
+            else
+            {
+                OnItemSelected.InvokeAsync((item, null));
+            }
+        }
+    }
+
+    private CheckboxItem GetParent(CheckboxItem item, List<CheckboxItem> items)
+    {
+        foreach (var parent in items)
+        {
+            if (parent.Children.Contains(item))
+            {
+                return parent;
+            }
+            var grandParent = GetParent(item, parent.Children);
+            if (grandParent != null)
+            {
+                return grandParent;
+            }
+        }
+        return null;
+    }
+
+
+    public class CheckboxItem
+    {
+        public string Name { get; set; }
+        public bool IsSelected { get; set; }
+        public List<CheckboxItem> Children { get; set; } = new List<CheckboxItem>();
+    }
+}

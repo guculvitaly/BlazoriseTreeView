@@ -1,9 +1,10 @@
 ﻿@page "/counter"
 @using System.Text.Json
+@using System.Collections.ObjectModel
 
 
 <PageTitle>Counter</PageTitle>
-
+<span>Favorites:</span>
 <ul level="0">
     @{
         @if (FavoritesNodes is not null)
@@ -19,6 +20,8 @@
 
 </ul>
 
+
+<span>Main nodes:</span>
 <CascadingValue Value="@AllDataSource">
     <ul level="0">
         @foreach (var item in Items)
@@ -45,7 +48,7 @@
     {
         await base.OnInitializedAsync();
         Items = new[]
-                                                {
+                                                                                                {
         new Item { Text = "Item 1",  NodeId = "1" },
         new Item
         {
@@ -83,6 +86,7 @@
     };
 
         AllDataSource = Items.ToList();
+        Console.WriteLine("data {0}", JsonSerializer.Serialize(AllDataSource));
     }
 
     protected override async Task OnParametersSetAsync()
@@ -101,19 +105,70 @@
         var result = new Item();
         var data = Items.ToList();
         var collection = new List<Item>();
-        //FavoritesNodes.Clear();
-        var ess = result.AddItemToCollection(data, node);
-        if(ess != null)
+        //List<Item> selectedItemsAndParents = new List<Item>();
+        //////FavoritesNodes.Clear();
+        //var ess = result.AddItemToCollection(data, node);
+        var ess = result.FindItemByIdAndCheckParent(data, node.ParentId);
+        
+        //var _test = GetCheckedNodes(ess);
+       
+
+        var checkedNodes = new HashSet<Item>();
+        foreach (var n in Items)
         {
-            collection.Add(ess);
-            FavoritesNodes = FavoritesNodes.Union(collection).Distinct().ToList();
+            var checkedNode = GetCheckedNodes(n);
+            if (checkedNode != null && !checkedNodes.Contains(checkedNode))
+            {
+                checkedNodes.Add(checkedNode);
+            }
         }
-        
-        
-        StateHasChanged();
+        FavoritesNodes = checkedNodes.ToList();
+        Console.WriteLine("collection {0}", JsonSerializer.Serialize(checkedNodes));
+        // StateHasChanged();
 
     }
 
 
+    Item GetCheckedNodes(Item node)
+    {
+        Item parent = null;
 
+        if (node.IsChecked)
+        {
+            parent = new Item
+                {
+                    NodeId = node.NodeId,
+                    ParentId = node.ParentId,
+                    IsChecked = node.IsChecked,
+                    Text = node.Text,
+                    Children = new List<Item>()
+                };
+        }
+
+        if (node.Children != null)
+        {
+            foreach (Item child in node.Children)
+            {
+                Item checkedChild = GetCheckedNodes(child);
+                if (checkedChild != null)
+                {
+                    if (parent == null)
+                    {
+                        parent = new Item
+                            {
+                                NodeId = node.NodeId,
+                                ParentId = node.ParentId,
+                                IsChecked = node.IsChecked,
+                                Text = node.Text,
+                                Children = new List<Item>()
+                            };
+                    }
+
+                    parent.Children.Add(checkedChild);
+                }
+            }
+        }
+
+        return parent;
+    }
 }

@@ -1,0 +1,14 @@
+﻿@using static BlazoriseTreeView.Components.CheckBoxList
+@if (Selected.Item1 != null && Selected.Item1 != null)
+{
+    <p>Selected Item: @Selected.Item1.Name</p>
+    @if (Selected.Item2.Children != null)
+    {
+        <p>Parent of Selected Item: @Selected.Item2.Name</p>
+    }
+}
+
+@code {
+    [Parameter]
+   public (CheckboxItem, CheckboxItem) Selected { get; set; }
+}

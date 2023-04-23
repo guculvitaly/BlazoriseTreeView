@@ -9,7 +9,7 @@ namespace BlazoriseTreeView
         {
 
         }
-        
+
         public string? ParentId { get; set; }
         public string NodeId { get; set; }
         public string Text { get; set; }
@@ -45,31 +45,50 @@ namespace BlazoriseTreeView
         }
 
 
-
-
-        public List<Item> BuildList(IEnumerable<Item> items, Item parent = null)
+        public Item GetCheckedNodes(Item node)
         {
-            var result = new List<Item>();
+            Item parent = null;
 
-            foreach (var item in items)
+            if (node.IsChecked)
             {
-                if (item.ParentId == null && parent == null || item.ParentId == parent?.NodeId)
+                parent = new Item
                 {
-                    var newItem = new Item
+                    NodeId = node.NodeId,
+                    ParentId = node.ParentId,
+                    IsChecked = node.IsChecked,
+                    Text = node.Text,
+                    Children = new List<Item>()
+                };
+            }
+
+            if (node.Children != null)
+            {
+                foreach (Item child in node.Children)
+                {
+                    Item checkedChild = GetCheckedNodes(child);
+                    if (checkedChild != null)
                     {
-                        Text = item.Text,
-                        NodeId = item.NodeId,
-                        Parent = parent,
-                        Children = BuildList(items, item)
-                    };
-                    result.Add(newItem);
+                        if (parent == null)
+                        {
+                            parent = new Item
+                            {
+                                NodeId = node.NodeId,
+                                ParentId = node.ParentId,
+                                IsChecked = node.IsChecked,
+                                Text = node.Text,
+                                Children = new List<Item>()
+                            };
+                        }
+
+                        parent.Children.Add(checkedChild);
+                    }
                 }
             }
 
-            return result;
+            return parent;
         }
 
-        public Item FindItemById(IEnumerable<Item> items, string id)
+        public Item FindItemByIdAndCheckParent(IEnumerable<Item> items, string id)
         {
             // Проходим по всем элементам в коллекции и ищем элемент с заданным идентификатором
             foreach (var item in items)
@@ -83,11 +102,13 @@ namespace BlazoriseTreeView
                 // Если у элемента есть дочерние элементы, ищем в них
                 else if (item.Children != null)
                 {
-                    var result = FindItemById(item.Children, id);
+
+                    var result = FindItemByIdAndCheckParent(item.Children, id);
 
                     if (result != null)
                     {
                         result.IsChecked = true;
+
                         return result;
                     }
                 }
@@ -95,55 +116,6 @@ namespace BlazoriseTreeView
 
             return null;
         }
-        public Item AddItemToCollection(IEnumerable<Item> Items, Item item)
-        {
-
-            if (item == null)
-                return null;
-
-            // Проверяем, выбран ли элемент
-            if (item.IsChecked)
-            {
-                // Находим родительский элемент в дереве
-                Item parent = FindItemById(Items, item.ParentId);
-                if (parent == null)
-                {
-                    // Если не нашли родительский элемент, добавляем текущий элемент в корень коллекции
-                    
-                    return new Item
-                    {
-                        NodeId = item.NodeId,
-                        Text = item.Text,
-                        Parent = item.Parent,
-                        ParentId = item.ParentId,
-                        IsChecked = item.IsChecked,
-                        Children = item.Children,
-                    };
-                }
-                else
-                {
-                    // Если нашли родительский элемент, добавляем текущий элемент в коллекцию его дочерних элементов
-                    if (parent.Children == null)
-                        
-
-                    parent.Children.Add(item);
-                    parent.IsExpanded = true; // Разворачиваем родительский элемент, чтобы показать добавленный элемент
-                    return parent;
-                }
-            }
-
-            // Рекурсивно вызываем метод для каждого дочернего элемента текущего элемента
-            if (item.Children != null)
-            {
-                foreach (Item child in item.Children)
-                {
-                    AddItemToCollection(Items, child);
-                }
-            }
-
-            return null;
-        }
-        
 
 
     }

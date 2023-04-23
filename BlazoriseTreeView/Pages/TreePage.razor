@@ -1,0 +1,57 @@
+﻿@page "/treeview"
+@using BlazoriseTreeView.Components
+@using System.Text.Json
+@using static BlazoriseTreeView.Components.CheckBoxList
+
+
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Checkbox List</h4>
+        <CheckBoxList  Items="@items" OnItemSelected="HandleItemSelected"></CheckBoxList>
+    </div>
+    <div class="col-md-6">
+        <h4>Selected Item</h4>
+        <SelectedItemDisplay Selected="selectedItem"></SelectedItemDisplay>
+    </div>
+</div>
+
+
+@code {
+    private (CheckboxItem, CheckboxItem) selectedItem { get; set; } = new();
+    private List<CheckboxItem> items { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        items = new List<CheckboxItem>
+    {
+        new CheckboxItem
+        {
+            Name = "Parent 1",
+            Children = new List<CheckboxItem>
+            {
+                new CheckboxItem { Name = "Child 1" },
+                new CheckboxItem { Name = "Child 2" }
+            }
+        },
+        new CheckboxItem
+        {
+            Name = "Parent 2",
+            Children = new List<CheckboxItem>
+            {
+                new CheckboxItem { Name = "Child 3" },
+                new CheckboxItem { Name = "Child 4" }
+            }
+        }
+    };
+    }
+
+    private void HandleItemSelected((CheckboxItem, CheckboxItem) item)
+    {
+        selectedItem = item;
+        Console.WriteLine("selectedItem {0}", JsonSerializer.Serialize(selectedItem));
+    }
+
+
+}
