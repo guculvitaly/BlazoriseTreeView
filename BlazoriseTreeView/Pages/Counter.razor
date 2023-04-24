@@ -11,7 +11,7 @@
         {
             @foreach (var item in FavoritesNodes)
             {
-                var _key = "favorites_" + item;
+
                 <BlazoriseTreeView.Components.FavoriteTree FavoriteItem="@item" Level=1 @key=item />
             }
         }
@@ -26,7 +26,7 @@
     <ul level="0">
         @foreach (var item in Items)
         {
-            var _key = "main_tree_" + item;
+
             <BlazoriseTreeView.Components.TreeComponent Item=@item FavoritesParentCallback="FavoriteCallbackNode" FavoritesNodesCallBack="_FavoritesNodesCallBack" Level=1 @key=item />
         }
     </ul>
@@ -40,7 +40,7 @@
     private int currentCount = 0;
     private List<Item> FavoritesNodes { get; set; } = new List<Item>();
     private List<Item> ResultArray { get; set; } = new List<Item>();
-    private Item FavoNodes { get; set; } = null;
+    private Item CheckedNode { get; set; }
     List<string> selectedNodes = new List<string>();
     IEnumerable<Item> Items;
 
@@ -48,7 +48,7 @@
     {
         await base.OnInitializedAsync();
         Items = new[]
-                                                                                                {
+                                                                                                                {
         new Item { Text = "Item 1",  NodeId = "1" },
         new Item
         {
@@ -105,28 +105,42 @@
         var result = new Item();
         var data = Items.ToList();
         var collection = new List<Item>();
-        //List<Item> selectedItemsAndParents = new List<Item>();
-        //////FavoritesNodes.Clear();
-        //var ess = result.AddItemToCollection(data, node);
-        var ess = result.FindItemByIdAndCheckParent(data, node.ParentId);
-        
-        //var _test = GetCheckedNodes(ess);
-       
 
         var checkedNodes = new HashSet<Item>();
         foreach (var n in Items)
         {
             var checkedNode = GetCheckedNodes(n);
+
             if (checkedNode != null && !checkedNodes.Contains(checkedNode))
             {
                 checkedNodes.Add(checkedNode);
+
             }
         }
-        FavoritesNodes = checkedNodes.ToList();
-        Console.WriteLine("collection {0}", JsonSerializer.Serialize(checkedNodes));
-        // StateHasChanged();
+        SetParentChecked(data);
 
+        FavoritesNodes = checkedNodes.ToList();
+
+        StateHasChanged();
+
+        //Console.WriteLine("collection {0}", JsonSerializer.Serialize(test));
     }
+
+    void SetParentChecked(List<Item> nodes)
+    {
+
+        foreach (var node in nodes)
+        {
+
+            if (node.Children != null)
+            {
+                node.IsChecked = true;
+
+                SetParentChecked(node.Children);
+            }
+        }
+    }
+
 
 
     Item GetCheckedNodes(Item node)

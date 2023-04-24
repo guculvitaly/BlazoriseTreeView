@@ -24,8 +24,7 @@ namespace BlazoriseTreeView
         public string ShowOrHideUl => !ShowItem ? "hideChild" : string.Empty;
 
         public List<Item> Children { get; set; }
-        public List<string> CheckedNodes = new List<string>();
-        public Item Parent { get; set; }
+ 
 
         private string AddOrRemoveCaretClass()
         {
@@ -88,12 +87,12 @@ namespace BlazoriseTreeView
             return parent;
         }
 
-        public Item FindItemByIdAndCheckParent(IEnumerable<Item> items, string id)
+        public Item FindItemByIdAndCheckParent(IEnumerable<Item> items, string parentId, string nodeId)
         {
             // Проходим по всем элементам в коллекции и ищем элемент с заданным идентификатором
             foreach (var item in items)
             {
-                if (item.NodeId == id)
+                if (item.NodeId == parentId || item?.ParentId == nodeId)
                 {
                     item.IsChecked = true;
                     return item;
@@ -103,7 +102,7 @@ namespace BlazoriseTreeView
                 else if (item.Children != null)
                 {
 
-                    var result = FindItemByIdAndCheckParent(item.Children, id);
+                    var result = FindItemByIdAndCheckParent(item.Children, parentId, nodeId);
 
                     if (result != null)
                     {
@@ -117,6 +116,38 @@ namespace BlazoriseTreeView
             return null;
         }
 
+        public  Item FindChildById(Item node, string nodeId)
+        {
+            if (node.NodeId == nodeId)
+            {
+                return node;
+            }
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
+                {
+                    var result = FindChildById(child, nodeId);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public  Tuple<Item, Item> FindNodeAndParent(List<Item> nodes, string nodeId)
+        {
+            foreach (var node in nodes)
+            {
+                var result = FindChildById(node, nodeId);
+                if (result != null)
+                {
+                    return Tuple.Create(result, node);
+                }
+            }
+            return null;
+        }
 
     }
 

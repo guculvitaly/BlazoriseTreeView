@@ -26,12 +26,13 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-         Console.WriteLine("FavoriteItem OnParametersSetAsync {0}", JsonSerializer.Serialize(FavoriteItem));
+        Console.WriteLine("FavoriteItem OnParametersSetAsync {0}", JsonSerializer.Serialize(FavoriteItem));
+       
     }
 
     private async void CheckboxChanged(ChangeEventArgs e, Item node)
     {
-        
+        Console.WriteLine("FavoriteItem CheckboxChanged node {0}", JsonSerializer.Serialize(node));
     }
 
     void OnClickNode(Item item)

@@ -44,27 +44,28 @@
     {
         await base.OnInitializedAsync();
         InitParentId();
+        Console.WriteLine("InitParentId {0}", JsonSerializer.Serialize(AllDataSource));
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         _jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Checked_Ids.js");
-       // LocalStorageSelectedIds = await _jsModule.InvokeAsync<List<string>>("checkChange");
-       // await localStorage.SetItemAsync("CheckedNodes_Main_Tree", LocalStorageSelectedIds);
+        // LocalStorageSelectedIds = await _jsModule.InvokeAsync<List<string>>("checkChange");
+        // await localStorage.SetItemAsync("CheckedNodes_Main_Tree", LocalStorageSelectedIds);
 
     }
     private void InitParentId()
     {
-        if(AllDataSource != null)
-        foreach (var item in AllDataSource)
-        {
-            var childs = item.Children;
-            if (childs != null && childs.Count > 0)
+        if (AllDataSource != null)
+            foreach (var item in AllDataSource)
             {
-                SetParentId(childs, item.NodeId);
+                var childs = item.Children;
+                if (childs != null && childs.Count > 0)
+                {
+                    SetParentId(childs, item.NodeId);
+                }
             }
-        }
     }
     private void SetParentId(List<Item> childs, string parentId)
     {
@@ -91,33 +92,6 @@
 
     }
 
-    private Item AddCheckedNodes(Item item, List<String> ids)
-    {
-        var child = new Item
-            {
-                NodeId = item.NodeId,
-                ParentId = item.ParentId,
-                Text = item.Text,
-                IsChecked = true,
-                Children = new(),
-            };
-
-        if (item.Children?.Count > 0)
-        {
-
-            foreach (var c in item.Children)
-            {
-
-                if (ids.Contains(c.NodeId))
-                {
-                    //c.IsChecked = true;
-                    child.Children.Add(AddCheckedNodes(c, ids));
-                }
-
-            }
-        }
-        return child;
-    }
 
 
     private async void CheckboxChanged(ChangeEventArgs e, Item node)
@@ -127,7 +101,11 @@
         var value = e.Value;
 
         node.IsChecked = !node.IsChecked;
+        if ((bool)value) // if node is checked
+        {
+            await FavoritesParentCallback.InvokeAsync(node);
 
+        }
         if (node.IsInteracted && node.IsChecked) // if parent node checked
         {
             CheckAllNodes(node, node.IsChecked);
@@ -137,62 +115,12 @@
             CheckAllNodes(node, node.IsChecked);
 
         }
-        if ((bool)value) // if node is checked
-        {
-            await FavoritesParentCallback.InvokeAsync(node);
 
-            //if (AllDataSource?.Count > 0)
-            //{
-            //    foreach (var item in AllDataSource)
-            //    {
-            //        if (SelectedIds.Contains(item.NodeId))
-            //        {
-            //            var _node = AddCheckedNodes(item, SelectedIds);
-            //            FavoritesNodes.Add(_node);
-            //            await FavoritesNodesCallBack.InvokeAsync(FavoritesNodes);
-
-
-            //        }
-            //    }
-
-            //}
-        }
 
 
     }
 
-    async void CheckboxClicked(string nodeId, object checkedValue)
-    {
-        var ids = new List<Item>();
-       
 
-        if ((bool)checkedValue)
-        {
-
-            if (!SelectedValues.Contains(nodeId))
-            {
-                Console.WriteLine("Add node {0}", checkedValue);
-
-                SelectedValues.Add(nodeId);
-            }
-        }
-        else
-        {
-
-            if (SelectedValues.Contains(nodeId))
-            {
-                Console.WriteLine("Remove node {0}", checkedValue);
-                SelectedValues.Remove(nodeId);
-            }
-        }
-
-
-        //localStorage.SetItemAsync("CheckedNodes_Main_Tree", ids.SelectMany(f => f.NodeId));
-
-        Console.WriteLine("CheckedNodes {0}", JsonSerializer.Serialize(SelectedValues));
-
-
-    }
 
     /// <summary>
     /// Check or Uncheck all nodes
